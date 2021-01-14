@@ -1,0 +1,11 @@
+#ignore the compiled fortran modules
+*pyc
+
+#ignore reference data
+#sampletraj
+
+#ignore editing .swps
+*swp
+
+#other specific files
+#testsrelspceresults050519.zip

@@ -1,0 +1,21 @@
+To create a CG representation from an Amber
+>>generator.CreateCG('Prefix')
+
+This will walk through the creation process, and at the end create the files described below:
+
+Prefix.mapfile
+contains a dictionary with keys for each amino-acid type that has been coarse-grained.  The corresponding values contain information about CG model topology and mapping
+
+Prefix_generatorCG.txt
+This file contains the system sitelist, bondlist, ambermapping, and other information that results when the mapfile is applied to the Amber input files
+
+Prefix_md.py
+This is a sim package script file that builds the CG system.
+
+To create a Sys object from a previously defined CG mapping
+>>Sys=generator.ReadGenerator('Prefix').MakeSysObject()
+
+If you hand edit an already existing mapfile, then run
+>>generator.CreateCG('Prefix')
+it will bypass having to re-input everything and just create the above files based off of the already existing mapfile. For example, if you make a mapfile for one system say the solvated 12 FF system, then you can use that same mapfile to create a generator file and md.py file for another system.  As long as they have all the same amino acid and molecule types.
+
