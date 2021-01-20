@@ -11,7 +11,7 @@ import numpy as np
 class PenaltyClass(object):
     
     def __init__(self, Sys, Measure, Target, Coef = 1., Name = "penalty", 
-                 MeasureScale = 1., ValInd = 0):
+                 MeasureScale = 1., ValInd = 0, LagMult = 0):
         """Initializes a penalty constraint in the minimization, of the form
 Coef * (<Measure> - Target)^2  where <Target> is the ensemble average from Measure.  
 Coef can be gradually increased over successive minimizations until the constraint
@@ -42,7 +42,7 @@ MeasureScale: optional scale factor for the measurement and target value"""
             self.Measure = Measure
         self.Target = Target
         self.Coef = Coef
-        self.LagMult = 0.
+        self.LagMult = LagMult
         self.Name = Name
         self.ValInd = ValInd
         self.Obj = 0.
@@ -51,7 +51,7 @@ MeasureScale: optional scale factor for the measurement and target value"""
         self.CalcDeriv = False
         
     def InitializeOptimization(self):
-        self.LagMult = 0.
+        self.LagMult = self.LagMult
         self.Obj = 0.
         
     def InitializeAveraging1(self, n):

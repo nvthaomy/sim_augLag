@@ -41,6 +41,10 @@ dxModeDefaults = {"SD" : 0.01,
                   "CG"  : 0.10,
                   "HD"  : 0.10}
                         
+#Staged tolerances for Augmented Larangian method
+StageCGFracTols = None
+StageCGGradTols = None
+
 #Default options and parameters for minimization procedures
 Defaults = {"dxScaleUp" : 1.5,
             "dxScaleDown" : 0.2,
@@ -1669,6 +1673,10 @@ other arguments etc. are the same as the default minimization method"""
         for (i, Coef) in enumerate(StageCoefs):
             print "="*20 + "STAGE %d / %d" % (i+1, len(StageCoefs)) + "="*20 
             print "COEF = %12.4e\n" % Coef
+            self.CGFracTol = StageCGFracTols[i]
+            self.CGGradTol = StageCGGradTols[i]
+            print "CGFracTol = %12.4e" %self.CGFracTol 
+            print "CGGradTol = %12.4e\n" %self.CGGradTol
             for Pen in self.Penalties:
                 Pen.Coef = Coef
                 print "LAGMULT for %s = %12.4e\n" % (Pen.Name, Pen.LagMult)

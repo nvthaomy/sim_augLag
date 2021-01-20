@@ -8,7 +8,6 @@ import numpy as np
 import optimize, optimizetraj
 
 
-
 class OptimizeMultiTrajClass(optimizetraj.OptimizeTrajClass):
     
     def __init__(self, OptimizeTrajList, Weights = None, FilePrefix = None, 
@@ -289,6 +288,10 @@ other arguments etc. are the same as the default minimization method"""
             nopt = len(self.OptimizeTrajList)
             for (ind, Opt) in enumerate(self.OptimizeTrajList):
                 print "Optimizer %d of %s" % (ind+1, nopt)
+                Opt.CGFracTol = optimizetraj.StageCGFracTols[i] 
+                Opt.CGGradTol = optimizetraj.StageCGGradTols[i] 
+                print "  CGFracTol = %12.4e" %Opt.CGFracTol  
+                print "  CGGradTol = %12.4e" %Opt.CGGradTol  
                 for Pen in Opt.Penalties:
                     Pen.Coef = Coef
                     print "  LAGMULT for %s = %12.4e\n" % (Pen.Name, Pen.LagMult)
