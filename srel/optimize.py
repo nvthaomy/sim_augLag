@@ -652,7 +652,7 @@ ChargePerAtom: total charge per atom for the entire system (dflt 0.)"""
             
             
     
-    def AddPenalty(self, Measure, Target, Coef = 1., Name = None, ValInd = 0, MeasureScale = 1., LagMult = 0.):
+    def AddPenalty(self, Measure, Target, Coef = 1., Name = None, ValInd = 0, MeasureScale = 1., LagMult = 0., LinearOff = False):
         """Adds a penalty constraint in the Srel minimization, of the form
 Coef * (<Measure> - Target)^2  where <Target> is the ensemble average from Measure.  
 Coef can be gradually increased over successive minimizations until the constraint
@@ -663,7 +663,8 @@ Target:  The target value of the average
 Coef:  The coefficient of the penalty function when added to the main objective
 Name:  An optional name
 ValInd: Index of the value to use in measure, if more than one
-MeasureScale: optional scale factor for the measurement and target value""" 
+MeasureScale: optional scale factor for the measurement and target value
+LinearOff: do not add linear term""" 
         if Name is None:
             Name = "penalty%d" % len(self.Penalties)
         Pen = penalty.PenaltyClass(self.ModSys, Measure, Target, Coef, 
