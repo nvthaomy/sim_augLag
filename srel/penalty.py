@@ -11,7 +11,7 @@ import numpy as np
 class PenaltyClass(object):
     
     def __init__(self, Sys, Measure, Target, Coef = 1., Name = "penalty", 
-                 MeasureScale = 1., ValInd = 0, LagMult = 0):
+                 MeasureScale = 1., ValInd = 0, LagMult = 0, Tol = 1e-2):
         """Initializes a penalty constraint in the minimization, of the form
 Coef * (<Measure> - Target)^2  where <Target> is the ensemble average from Measure.  
 Coef can be gradually increased over successive minimizations until the constraint
@@ -23,7 +23,9 @@ Target:  The target value of the average
 Coef:  The coefficient of the penalty function when added to the main objective
 Name:  An optional name
 ValInd: Index of the value to use in measure, if more than one
-MeasureScale: optional scale factor for the measurement and target value"""
+MeasureScale: optional scale factor for the measurement and target value
+Tol: tolerance of <Measure> - Target"""
+
         if Measure == "PEnergy" or getattr(Measure, "Name", "") == "PEnergy":
             self.__Mode = 1
             self.Measure = Sys.Measures.PEnergy
@@ -49,7 +51,9 @@ MeasureScale: optional scale factor for the measurement and target value"""
         self.MeasureScale = MeasureScale
         self.KeepDerivs = False
         self.CalcDeriv = False
-        
+        self.Tol = Tol
+        self.StageDeltaTol = (1/Coef)**(0.1) 
+
     def InitializeOptimization(self):
         self.LagMult = self.LagMult
         self.Obj = 0.
@@ -137,6 +141,7 @@ MeasureScale: optional scale factor for the measurement and target value"""
     def UpdateObj(self, Obj, Bias, DObj, DDObj):
         """Updates the contributions to Obj, Bias, DObj, and DDObj."""
         Delta = self.MeasureScale * (self.Avg - self.Target)
+        self.Delta = Delta
         print('New Calculate Avg value: {}'.format(self.Avg))
         print('Target: {}'.format(self.Target))
         print('Delta: {}'.format(Delta))

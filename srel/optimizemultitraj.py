@@ -282,22 +282,69 @@ other arguments etc. are the same as the default minimization method"""
         if not "StageCoefs" in kwargs:
             raise SyntaxError("Must specify input argument StageCoefs")
         StageCoefs = kwargs.pop("StageCoefs")
-        for (i, Coef) in enumerate(StageCoefs):
-            print "="*20 + "STAGE %d / %d" % (i+1, len(StageCoefs)) + "="*20 
-            print "COEF = %12.4e\n" % Coef
-            nopt = len(self.OptimizeTrajList)
-            for (ind, Opt) in enumerate(self.OptimizeTrajList):
-                print "Optimizer %d of %s" % (ind+1, nopt)
-                Opt.CGFracTol = optimizetraj.StageCGFracTols[i] 
-                Opt.CGGradTol = optimizetraj.StageCGGradTols[i] 
-                print "  CGFracTol = %12.4e" %Opt.CGFracTol  
-                print "  CGGradTol = %12.4e" %Opt.CGGradTol  
-                for Pen in Opt.Penalties:
-                    Pen.Coef = Coef
-                    print "  LAGMULT for %s = %12.4e\n" % (Pen.Name, Pen.LagMult)
-            self.Run(*args, **kwargs)
-            #update the lagrange multipliers
-            for Opt in self.OptimizeTrajList:
-                for Pen in Opt.Penalties:
-                    Pen.UpdateLagMult()         
-        
+
+        if "UpdateMode" in kwargs:
+            print('UpdateMode in kwargs')
+        print('UpdateMode in kwargs ',kwargs.pop("UpdateMode"))
+        if not "UpdateMode" in kwargs or kwargs.pop("UpdateMode") == 0:
+            for (i, Coef) in enumerate(StageCoefs):
+                print "="*20 + "STAGE %d / %d" % (i+1, len(StageCoefs)) + "="*20 
+                print "COEF = %12.4e\n" % Coef
+                nopt = len(self.OptimizeTrajList)
+                for (ind, Opt) in enumerate(self.OptimizeTrajList):
+                    print "Optimizer %d of %s" % (ind+1, nopt)
+                    Opt.CGFracTol = optimizetraj.StageCGFracTols[i] 
+                    Opt.CGGradTol = optimizetraj.StageCGGradTols[i] 
+                    print "  CGFracTol = %12.4e" %Opt.CGFracTol  
+                    print "  CGGradTol = %12.4e" %Opt.CGGradTol  
+                    for Pen in Opt.Penalties:
+                        Pen.Coef = Coef
+                        print "  LAGMULT for %s = %12.4e\n" % (Pen.Name, Pen.LagMult)
+                self.Run(*args, **kwargs)
+                #update the lagrange multipliers
+                for Opt in self.OptimizeTrajList:
+                    for Pen in Opt.Penalties:
+                        Pen.UpdateLagMult()         
+        else:
+            if kwargs.pop("UpdateMode") == 1:
+                if not kwargs.pop("NMaxStage"):
+                    NMaxStage = 100
+                else: 
+                    NMaxStage = kwargs.pop("NMaxStage")
+                finished = [0] 
+                while not np.all(finished):
+                    for i in range(NMaxStage):
+                        print "="*20 + "STAGE %d" % (i+1) + "="*20
+                        nopt = len(self.OptimizeTrajList) 
+                        if i == 0:
+                            Coefs = np.ones((nopt,len(Opt.Penalties))) * StageCoefs[0]
+                            js = np.zeros((nopt,len(Opt.Penalties)),dtype=int)
+                            finished = np.zeros(nopt,len(Opt.Penalties))
+                        for (ind, Opt) in enumerate(self.OptimizeTrajList):
+                            print "Optimizer %d of %s" % (ind+1, nopt)
+                            Opt.CGGradTol = 1./Coef**(j+1.) 
+                            print "  CGFracTol = %12.4e" %Opt.CGFracTol
+                            print "  CGGradTol = %12.4e" %Opt.CGGradTol
+                            for k,Pen in enumerate(Opt.Penalties):
+                                Coef = Coefs[ind,k]
+                                j = js[ind,k]
+                                Pen.Coef = Coef
+                                Pen.StageDeltaTol = (1/Coef)**(0.1+0.9*j)
+                                print "  COEF for %s =  %12.4e" % (Pen.Name, Pen.Coef)
+                                print "  LAGMULT for %s = %12.4e" % (Pen.Name, Pen.LagMult)
+                                print "  STAGE TOLERANCE for %s = %12.4e\n" % (Pen.Name, Pen.StageDeltaTol)
+                                print "  TOLERANCE for %s = %12.4e\n" % (Pen.Name, Pen.Tol)
+                    self.Run(*args, **kwargs)
+                    for (ind, Opt) in enumerate(self.OptimizeTrajList):
+                        for k,Pen in enumerate(Opt.Penalties):
+                            #update the lagrange multipliers
+                            if np.abs(Pen.Delta) <= Pen.StageDeltaTol:
+                                Pen.UpdateLagMult()
+                            #update the coeffcient
+                            else:
+                                js[ind,k] += 1
+                                Coefs[ind,k] = StageCoefs[js[ind,k]]
+                            if np.abs(Pen.Delta) <= Pen.Tol:
+                                finished[ind,k] = 1.
+            else:
+                raise Exception('Only support UpdateMode == 1')
