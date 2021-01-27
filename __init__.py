@@ -19,6 +19,8 @@ import chem
 import potential
 
 import measure
+import measure_new
+import measure_old
 import atomselect
 import atommap
 import integrate
