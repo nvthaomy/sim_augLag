@@ -11,7 +11,7 @@ import numpy as np
 class PenaltyClass(object):
     
     def __init__(self, Sys, Measure, Target, Coef = 1., Name = "penalty", 
-                 MeasureScale = 1., ValInd = 0, LagMult = 0, Tol = 1e-2):
+                 MeasureScale = 1., ValInd = 0, LagMult = 0, Tol = 1e-2, LinearOff = False):
         """Initializes a penalty constraint in the minimization, of the form
 Coef * (<Measure> - Target)^2  where <Target> is the ensemble average from Measure.  
 Coef can be gradually increased over successive minimizations until the constraint
@@ -24,7 +24,8 @@ Coef:  The coefficient of the penalty function when added to the main objective
 Name:  An optional name
 ValInd: Index of the value to use in measure, if more than one
 MeasureScale: optional scale factor for the measurement and target value
-Tol: tolerance of <Measure> - Target"""
+Tol: tolerance of <Measure> - Target
+LinearOff: turn off linear term"""
 
         if Measure == "PEnergy" or getattr(Measure, "Name", "") == "PEnergy":
             self.__Mode = 1
@@ -53,6 +54,9 @@ Tol: tolerance of <Measure> - Target"""
         self.CalcDeriv = False
         self.Tol = Tol
         self.StageDeltaTol = (1/Coef)**(0.1) 
+        self.LinearOff = LinearOff
+        if self.LinearOff:
+            self.LagMult = 0.
 
     def InitializeOptimization(self):
         self.LagMult = self.LagMult
@@ -140,12 +144,15 @@ Tol: tolerance of <Measure> - Target"""
         
     def UpdateObj(self, Obj, Bias, DObj, DDObj):
         """Updates the contributions to Obj, Bias, DObj, and DDObj."""
+        if self.LinearOff:
+            self.LagMult = 0.
         Delta = self.MeasureScale * (self.Avg - self.Target)
         self.Delta = Delta
         print('New Calculate Avg value: {}'.format(self.Avg))
         print('Target: {}'.format(self.Target))
         print('Delta: {}'.format(Delta))
-        self.Obj = 0.5 * self.Coef * np.sum(Delta**2) - self.LagMult * Delta
+        self.Obj = 0.5 * self.Coef * np.sum(Delta**2) - self.LagMult * Delta 
+
         print('Obj {}'.format(self.Obj))
         Obj += self.Obj
         Bias += self.Obj
@@ -161,7 +168,8 @@ Tol: tolerance of <Measure> - Target"""
         
     def UpdateLagMult(self):
         self.LagMult = self.LagMult - self.Coef * self.MeasureScale * (self.Avg - self.Target)
-        
+        if self.LinearOff:
+            self.LagMult = 0. 
     def CleanUp(self):
         self.Measure = None
         
